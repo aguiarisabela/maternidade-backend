@@ -33,5 +33,5 @@ build/
 .vscode/
 
 # Não versionar configurações sensíveis
-src/main/resources/application.properties
+maternidade-recode\src\main\resources\application.properties
 

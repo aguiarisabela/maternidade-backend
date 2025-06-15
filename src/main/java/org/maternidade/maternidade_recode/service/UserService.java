@@ -40,7 +40,7 @@ public class UserService {
     return userRepository.findByEmail(email); // Adicione isso no UserRepository
 }
 
-    public Optional<User> findByUsername(String identifier) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
+    public Optional<User> findByUsername(String username) {
+    return userRepository.findByUsername(username);
+}
 }

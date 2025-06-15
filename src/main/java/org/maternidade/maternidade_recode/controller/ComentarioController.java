@@ -1,77 +1,54 @@
 package org.maternidade.maternidade_recode.controller;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.maternidade.maternidade_recode.model.Comentario;
 import org.maternidade.maternidade_recode.model.Post;
 import org.maternidade.maternidade_recode.model.User;
 import org.maternidade.maternidade_recode.service.ComentarioService;
 import org.maternidade.maternidade_recode.service.PostService;
 import org.maternidade.maternidade_recode.service.UserService;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDateTime;
-
-@Controller
-@RequestMapping("/comentarios")
+@RestController
+@RequestMapping("/api/comentarios")
 public class ComentarioController {
 
-    private final ComentarioService comentarioRepository;
+    private final ComentarioService comentarioService;
     private final PostService postService;
     private final UserService userService;
 
-    public ComentarioController(ComentarioService comentarioRepository, PostService postService, UserService userService) {
-        this.comentarioRepository = comentarioRepository;
+    public ComentarioController(ComentarioService comentarioService, PostService postService, UserService userService) {
+        this.comentarioService = comentarioService;
         this.postService = postService;
         this.userService = userService;
     }
 
-    @GetMapping
-    public String listComentario(Model model) {
-        model.addAttribute("comentarios", comentarioRepository.findAll());
-        return "comentarios/list";
+    // Lista comentários de um post
+    @GetMapping("/post/{postId}")
+    public List<Comentario> getComentariosByPost(@PathVariable Long postId) {
+        return comentarioService.findByPostId(postId);
     }
 
-    @GetMapping("/new")
-    public String newComentarioForm(Model model) {
-        model.addAttribute("comentario", new Comentario());
-        model.addAttribute("posts", postService.findAll());
-        model.addAttribute("users", userService.findAll());
-        return "comentarios/form";
-    }
-
+    // Cria um novo comentário
     @PostMapping
-    public String saveComentario(@ModelAttribute Comentario comentario) {
-        // Carrega o post e o usuário associados, usando os IDs enviados no formulário
-        Post post = postService.findById(comentario.getPost().getId());
-        User autor = userService.findById(comentario.getAutor().getId());
-
-        // Atribui o post e o autor ao comentário
-        comentario.setPost(post);
+    public Comentario createComentario(@RequestBody Comentario comentario, @RequestHeader(value = "Authorization", required = false) String token) {
+        // Simula usuário logado (futuramente usar JWT)
+        String username = "user1"; // Substituir por extração do token
+        User autor = userService.findByUsername(username).orElseThrow();
         comentario.setAutor(autor);
-
-        // Define a data de criação
         comentario.setDataRegistro(LocalDateTime.now());
-
-        // Salva o comentário
-        comentarioRepository.save(comentario);
-
-        // Redireciona para a lista de comentários
-        return "redirect:/comentarios";
-    }
-
-    @GetMapping("/edit/{id}")
-    public String editComentario(@PathVariable Long id, Model model) {
-        Comentario comentario = comentarioRepository.findById(id);
-        model.addAttribute("comentario", comentario);
-        model.addAttribute("posts", postService.findAll());
-        model.addAttribute("users", userService.findAll());
-        return "comentarios/form";
-    }
-
-    @GetMapping("/delete/{id}")
-    public String deleteComentario(@PathVariable Long id) {
-        comentarioRepository.delete(id);
-        return "redirect:/comentarios";
+        if (comentario.getPost() != null && comentario.getPost().getId() != null) {
+            Post post = postService.findById(comentario.getPost().getId());
+            comentario.setPost(post);
+        }
+        return comentarioService.save(comentario);
     }
 }

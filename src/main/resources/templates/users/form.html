@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Novo Usuário</title></head>
+<body>
+<h1>Novo Usuário</h1>
+<form th:action="@{/users}" th:object="${user}" method="post">
+    
+    <input type="hidden" th:field="*{id}" />
+    
+    Nome: <input type="text" th:field="*{nomeCompleto}"/><br/>
+    Username: <input type="text" th:field="*{username}"/><br/>
+    Senha: <input type="password" th:field="*{senha}"/><br/>
+    Email: <input type="email" th:field="*{email}"/><br/>
+    Data Nascimento: <input type="date" th:field="*{dataNascimento}"/><br/>
+
+    Foto de Perfil: <input type="file" name="fotoPerfil"/><br/>
+
+    Newsletter: <input type="checkbox" th:field="*{newsletter}"/><br/>
+    Concorda Termos: <input type="checkbox" th:field="*{acceptedTerms}"/><br/>
+    Tipo: 
+    <select th:field="*{role}">
+        <option th:value="CLIENTE">Cliente</option>
+        <option th:value="ADMIN">Administrador</option>
+    </select><br/>
+    
+    <button type="submit">Salvar</button>
+</form>
+</body>
+</html>

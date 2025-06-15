@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Editar Post</title></head>
+<body>
+<h1>Editar Post</h1>
+<form th:action="@{/posts}" th:object="${post}" method="post">
+    <!-- Campo oculto para enviar o id do post -->
+    <input type="hidden" th:field="*{id}" />
+
+    Título: <input type="text" th:field="*{titulo}"/><br/>
+    Conteúdo: <textarea th:field="*{conteudo}"></textarea><br/>
+    Autor: 
+    <select th:field="*{autor.id}" required>
+        <option th:each="user : ${users}" th:value="${user.id}" th:text="${user.nomeCompleto}"/>
+    </select><br/>
+    <button type="submit">Salvar</button>
+</form>
+</body>
+</html>

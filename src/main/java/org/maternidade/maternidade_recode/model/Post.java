@@ -2,9 +2,11 @@ package org.maternidade.maternidade_recode.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
-@Table(name = "Post") // Nome da tabela no banco
+@Table(name = "Post")
 public class Post {
 
     @Id
@@ -17,18 +19,28 @@ public class Post {
     @Column(name = "conteudo")
     private String conteudo;
 
+    @Column(name = "imagem")
+    private String imagem;
+
     @Column(name = "dataCriacao")
     private LocalDateTime dataCriacao;
 
-    @ManyToOne // Relacionamento: um post tem um autor
-    @JoinColumn(name = "autorId") // Nome da coluna no banco
+    @ManyToOne
+    @JoinColumn(name = "autorId")
     private User autor;
 
-    // Construtor vazio (necessário para JPA)
+    @Column(name = "likes")
+    private int likes;
+
+    @ElementCollection
+    @CollectionTable(name = "post_comments", joinColumns = @JoinColumn(name = "post_id"))
+    @Column(name = "comment")
+    private List<String> comments = new ArrayList<>();
+
     public Post() {
     }
 
-    // Getters e Setters
+    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -53,6 +65,14 @@ public class Post {
         this.conteudo = conteudo;
     }
 
+    public String getImagem() {
+        return imagem;
+    }
+
+    public void setImagem(String imagem) {
+        this.imagem = imagem;
+    }
+
     public LocalDateTime getDataCriacao() {
         return dataCriacao;
     }
@@ -67,5 +87,21 @@ public class Post {
 
     public void setAutor(User autor) {
         this.autor = autor;
+    }
+
+    public int getLikes() {
+        return likes;
+    }
+
+    public void setLikes(int likes) {
+        this.likes = likes;
+    }
+
+    public List<String> getComments() {
+        return comments;
+    }
+
+    public void setComments(List<String> comments) {
+        this.comments = comments;
     }
 }

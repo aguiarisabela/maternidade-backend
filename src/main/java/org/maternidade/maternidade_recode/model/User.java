@@ -15,9 +15,9 @@ public class User {
     private String email;
     private String senha;
     private String dataNascimento;
-    private String fotoPerfil; // Pode ser um caminho ou URL da foto
+    private String fotoPerfil; // Stores the path or URL of the profile picture
 
-    // Getters e Setters
+    // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getNomeCompleto() { return nomeCompleto; }

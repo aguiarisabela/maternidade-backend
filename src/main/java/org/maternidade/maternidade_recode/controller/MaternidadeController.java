@@ -3,6 +3,8 @@ package org.maternidade.maternidade_recode.controller;
 import org.maternidade.maternidade_recode.model.User;
 import org.maternidade.maternidade_recode.service.FileUploadService;
 import org.maternidade.maternidade_recode.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -13,6 +15,7 @@ import java.util.Optional;
 @RequestMapping("/api")
 public class MaternidadeController {
 
+    private static final Logger logger = LoggerFactory.getLogger(MaternidadeController.class);
     private final UserService userService;
     private final FileUploadService fileUploadService;
 
@@ -43,6 +46,7 @@ public class MaternidadeController {
             userService.save(user);
             return ResponseEntity.ok("Usuário cadastrado com sucesso!");
         } catch (Exception e) {
+            logger.error("Erro ao cadastrar usuário", e);
             return ResponseEntity.badRequest().body("Erro ao cadastrar usuário: " + e.getMessage());
         }
     }

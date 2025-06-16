@@ -35,3 +35,5 @@ build/
 # Não versionar configurações sensíveis
 maternidade-recode\src\main\resources\application.properties
 
+application.properties:spring.datasource.password=*
+

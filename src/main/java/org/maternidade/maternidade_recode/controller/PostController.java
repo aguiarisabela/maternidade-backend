@@ -2,64 +2,57 @@ package org.maternidade.maternidade_recode.controller;
 
 import org.maternidade.maternidade_recode.model.Post;
 import org.maternidade.maternidade_recode.model.User;
-// import org.maternidade.maternidade_recode.model.User;
+import org.maternidade.maternidade_recode.service.FileUploadService;
 import org.maternidade.maternidade_recode.service.PostService;
 import org.maternidade.maternidade_recode.service.UserService;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
-// import java.util.List;
+import java.util.List;
 
-@Controller
+@RestController
 @RequestMapping("/posts")
 public class PostController {
 
     private final PostService postService;
     private final UserService userService;
+    private final FileUploadService fileUploadService;
 
-    public PostController(PostService postService, UserService userService) {
+    public PostController(PostService postService, UserService userService, FileUploadService fileUploadService) {
         this.postService = postService;
         this.userService = userService;
+        this.fileUploadService = fileUploadService;
     }
 
     @GetMapping
-    public String listPosts(Model model) {
-        model.addAttribute("posts", postService.findAll());
-        return "posts/list";
+    public List<Post> getAllPosts() {
+        return postService.findAll();
     }
 
-    @GetMapping("/new")
-    public String newPostForm(Model model) {
-        model.addAttribute("post", new Post());
-        model.addAttribute("users", userService.findAll());
-        return "posts/form";
-    }
+    @PostMapping(consumes = {"multipart/form-data"})
+    public ResponseEntity<?> createPost(
+            @RequestPart("post") Post post,
+            @RequestPart(value = "imagem", required = false) MultipartFile imagem,
+            @RequestHeader("Authorization") String token) {
+        try {
+            Long userId = Long.parseLong(token.replace("Bearer ", ""));
+            User autor = userService.findById(userId);
+            post.setAutor(autor);
+            post.setDataCriacao(LocalDateTime.now());
+            post.setLikes(0);
+            post.setComments(new java.util.ArrayList<>());
 
-    @PostMapping
-    public String savePost(@ModelAttribute Post post) {
-        post.setDataCriacao(LocalDateTime.now());
+            if (imagem != null && !imagem.isEmpty()) {
+                String imagePath = fileUploadService.saveFile(imagem);
+                post.setImagem(imagePath);
+            }
 
-        // Buscar o usuário pelo ID e associá-lo ao post
-        User autor = userService.findById(post.getAutor().getId());
-        post.setAutor(autor);
-
-        postService.save(post);
-        return "redirect:/posts";
-    }
-
-    @GetMapping("/edit/{id}")
-    public String editPost(@PathVariable Long id, Model model) {
-        Post post = postService.findById(id);
-        model.addAttribute("post", post);
-        model.addAttribute("users", userService.findAll());
-        return "posts/form";
-    }
-
-    @GetMapping("/delete/{id}")
-    public String deletePost(@PathVariable Long id) {
-        postService.delete(id);
-        return "redirect:/posts";
+            Post savedPost = postService.save(post);
+            return ResponseEntity.ok(savedPost);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Erro ao criar post: " + e.getMessage());
+        }
     }
 }

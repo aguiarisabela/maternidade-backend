@@ -1,14 +1,11 @@
 package org.maternidade.maternidade_recode.controller;
 
-import org.maternidade.maternidade_recode.model.LoginRequest; // Importe a nova classe
+import org.maternidade.maternidade_recode.model.LoginRequest;
 import org.maternidade.maternidade_recode.model.User;
 import org.maternidade.maternidade_recode.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,6 +35,21 @@ public class LoginController {
             return ResponseEntity.ok(response);
         } else {
             return ResponseEntity.badRequest().body(Map.of("message", "Usuário ou senha inválidos!"));
+        }
+    }
+
+    @GetMapping("/user-photo/{userId}")
+    public ResponseEntity<Map<String, String>> getUserPhoto(@PathVariable Long userId) {
+        User user = userService.findById(userId);
+        if (user != null && user.getFotoPerfil() != null) {
+            Map<String, String> response = new HashMap<>();
+            response.put("fotoPerfil", user.getFotoPerfil()); // Caminho da imagem no servidor
+            response.put("nomeCompleto", user.getNomeCompleto()); // Opcional
+            return ResponseEntity.ok(response);
+        } else {
+            Map<String, String> response = new HashMap<>();
+            response.put("fotoPerfil", "/default.jpg");
+            return ResponseEntity.ok(response);
         }
     }
 }

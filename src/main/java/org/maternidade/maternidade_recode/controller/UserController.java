@@ -2,13 +2,14 @@ package org.maternidade.maternidade_recode.controller;
 
 import org.maternidade.maternidade_recode.model.User;
 import org.maternidade.maternidade_recode.service.UserService;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-@Controller
+@RestController // Alterado de @Controller para @RestController
 @RequestMapping("/users")
 public class UserController {
 
@@ -18,35 +19,47 @@ public class UserController {
         this.userService = userService;
     }
 
+    // Endpoint para listar usuários (agora retorna JSON)
     @GetMapping
-    public String listUsers(Model model) {
+    public ResponseEntity<List<User>> listUsers() {
         List<User> users = userService.findAll();
-        model.addAttribute("users", users);
-        return "users/list";
+        return ResponseEntity.ok(users);
     }
 
-    @GetMapping("/new")
-    public String newUserForm(Model model) {
-        model.addAttribute("user", new User());
-        return "users/form";
-    }
-
+    // Endpoint para criar novo usuário (agora retorna JSON)
     @PostMapping
-    public String saveUser(@ModelAttribute User user) {
-        userService.save(user);
-        return "redirect:/users";
+    public ResponseEntity<User> saveUser(@RequestBody User user) {
+        User savedUser = userService.save(user);
+        return ResponseEntity.ok(savedUser);
     }
 
+    // Endpoint para editar usuário
     @GetMapping("/edit/{id}")
-    public String editUser(@PathVariable Long id, Model model) {
+    public ResponseEntity<User> editUser(@PathVariable Long id) {
         User user = userService.findById(id);
-        model.addAttribute("user", user);
-        return "users/form";
+        return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
     }
 
+    // Endpoint para deletar usuário
     @GetMapping("/delete/{id}")
-    public String deleteUser(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.delete(id);
-        return "redirect:/users";
+        return ResponseEntity.ok().build();
+    }
+
+    // Novo endpoint para buscar a foto de perfil do usuário
+    @GetMapping("/user-photo/{userId}")
+    public ResponseEntity<Map<String, String>> getUserPhoto(@PathVariable Long userId) {
+        User user = userService.findById(userId);
+        if (user != null && user.getFotoPerfil() != null) {
+            Map<String, String> response = new HashMap<>();
+            response.put("fotoPerfil", "/uploads/" + user.getFotoPerfil()); // Caminho relativo ao diretório estático
+            response.put("nomeCompleto", user.getNomeCompleto());
+            return ResponseEntity.ok(response);
+        } else {
+            Map<String, String> response = new HashMap<>();
+            response.put("fotoPerfil", "/uploads/default.jpg"); // Imagem padrão
+            return ResponseEntity.ok(response);
+        }
     }
 }

@@ -26,21 +26,21 @@ public class MaternidadeController {
      @Autowired
     private UserService userService;
 
-    @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginRequest loginRequest) {
-        String identifier = loginRequest.getUsername();
-        String password = loginRequest.getPassword();
+    // @PostMapping("/login")
+    // public ResponseEntity<String> login(@RequestBody LoginRequest loginRequest) {
+    //     String identifier = loginRequest.getUsername();
+    //     String password = loginRequest.getPassword();
 
-        Optional<User> userOptional = userService.findByUsername(identifier);
-        if (!userOptional.isPresent()) {
-            userOptional = userService.findByEmail(identifier);
-        }
-        if (userOptional.isPresent() && userOptional.get().getSenha().equals(password)) {
-            return ResponseEntity.ok("Login bem-sucedido!");
-        } else {
-            return ResponseEntity.badRequest().body("Usuário ou senha inválidos!");
-        }
-    }
+    //     Optional<User> userOptional = userService.findByUsername(identifier);
+    //     if (!userOptional.isPresent()) {
+    //         userOptional = userService.findByEmail(identifier);
+    //     }
+    //     if (userOptional.isPresent() && userOptional.get().getSenha().equals(password)) {
+    //         return ResponseEntity.ok("Login bem-sucedido!");
+    //     } else {
+    //         return ResponseEntity.badRequest().body("Usuário ou senha inválidos!");
+    //     }
+    // }
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody User user) {

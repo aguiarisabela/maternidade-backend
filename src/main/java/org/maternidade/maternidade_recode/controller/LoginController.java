@@ -29,10 +29,11 @@ public class LoginController {
         }
 
         if (userOptional.isPresent() && userOptional.get().getSenha().equals(password)) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "Login bem-sucedido");
-            response.put("userId", userOptional.get().getId());
-            return ResponseEntity.ok(response);
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Login bem-sucedido");
+        response.put("userId", userOptional.get().getId());
+        response.put("identifier", userOptional.get().getUsername());
+        return ResponseEntity.ok(response);
         } else {
             return ResponseEntity.badRequest().body(Map.of("message", "Usuário ou senha inválidos!"));
         }

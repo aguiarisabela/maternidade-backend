@@ -53,12 +53,12 @@ public class UserController {
         User user = userService.findById(userId);
         if (user != null && user.getFotoPerfil() != null) {
             Map<String, String> response = new HashMap<>();
-            response.put("fotoPerfil", "/uploads/" + user.getFotoPerfil()); // Caminho relativo ao diretório estático
+            response.put("fotoPerfil", "http://localhost:8080/uploads/" + user.getFotoPerfil()); // URL completa
             response.put("nomeCompleto", user.getNomeCompleto());
             return ResponseEntity.ok(response);
         } else {
             Map<String, String> response = new HashMap<>();
-            response.put("fotoPerfil", "/uploads/default.jpg"); // Imagem padrão
+            response.put("fotoPerfil", "http://localhost:8080/uploads/default.jpg");
             return ResponseEntity.ok(response);
         }
     }

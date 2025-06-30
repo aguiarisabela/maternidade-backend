@@ -1,19 +1,29 @@
 package org.maternidade.maternidade_recode.controller;
 
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.maternidade.maternidade_recode.model.Post;
 import org.maternidade.maternidade_recode.model.User;
 import org.maternidade.maternidade_recode.service.FileUploadService;
 import org.maternidade.maternidade_recode.service.PostService;
 import org.maternidade.maternidade_recode.service.UserService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.util.List;
 
 @RestController
 @RequestMapping("/posts")
@@ -31,15 +41,18 @@ public class PostController {
 
     @GetMapping
     public List<Post> getAllPosts() {
-        return postService.findAll();
+        return postService.findAll().stream().map(post -> {
+            post.getAutor().getNomeCompleto(); // Força o carregamento do autor
+            return post;
+        }).collect(Collectors.toList());
     }
 
-    @PostMapping(consumes = { "multipart/form-data" })
+    @PostMapping(consumes = {"multipart/form-data"})
     public ResponseEntity<?> createPost(
             @RequestPart("post") String postJson,
             @RequestPart(value = "imagem", required = false) MultipartFile imagem) {
         try {
-            System.out.println("JSON recebido: " + postJson); // Log do JSON
+            System.out.println("JSON recebido: " + postJson);
             ObjectMapper objectMapper = new ObjectMapper();
             Post post = objectMapper.readValue(postJson, Post.class);
             Long autorId = post.getAutor().getId();
@@ -47,13 +60,14 @@ public class PostController {
             if (autor == null) {
                 return ResponseEntity.badRequest().body("Autor não encontrado para o ID: " + autorId);
             }
+            System.out.println("Autor encontrado: " + autor.getNomeCompleto() + ", fotoPerfil: " + autor.getFotoPerfil());
             post.setAutor(autor);
             post.setDataCriacao(LocalDateTime.now());
             post.setLikes(0);
             post.setComments(new java.util.ArrayList<>());
 
             if (imagem != null && !imagem.isEmpty()) {
-                if (imagem.getSize() > 10 * 1024 * 1024) { // Limite de 10MB
+                if (imagem.getSize() > 10 * 1024 * 1024) {
                     return ResponseEntity.badRequest().body("Arquivo muito grande. Máximo 10MB.");
                 }
                 String imagePath = fileUploadService.saveFile(imagem);
@@ -61,7 +75,7 @@ public class PostController {
             }
 
             Post savedPost = postService.save(post);
-            System.out.println("Post salvo com ID: " + savedPost.getId()); // Log de sucesso
+            System.out.println("Post salvo com ID: " + savedPost.getId());
             return ResponseEntity.ok(savedPost);
         } catch (IOException e) {
             return ResponseEntity.badRequest().body("Erro ao processar arquivo: " + e.getMessage());
@@ -70,7 +84,7 @@ public class PostController {
         }
     }
 
-    @PutMapping(value = "/{id}", consumes = { "multipart/form-data" })
+    @PutMapping(value = "/{id}", consumes = {"multipart/form-data"})
     public ResponseEntity<?> updatePost(
             @PathVariable Long id,
             @RequestPart("post") String postJson,
@@ -149,4 +163,5 @@ public class PostController {
             return ResponseEntity.badRequest().body("Erro ao adicionar comentário: " + e.getMessage());
         }
     }
+    
 }

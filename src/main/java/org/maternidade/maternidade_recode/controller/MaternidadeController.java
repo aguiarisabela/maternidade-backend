@@ -1,13 +1,22 @@
-
 package org.maternidade.maternidade_recode.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.UUID;
+
 import org.maternidade.maternidade_recode.model.User;
 import org.maternidade.maternidade_recode.service.UserService;
-
+import java.nio.file.Path;
 
 @RestController
 @RequestMapping("/api")
@@ -23,33 +32,36 @@ public class MaternidadeController {
         return "comunidade";
     }
 
-     @Autowired
+    @Autowired
     private UserService userService;
 
-    // @PostMapping("/login")
-    // public ResponseEntity<String> login(@RequestBody LoginRequest loginRequest) {
-    //     String identifier = loginRequest.getUsername();
-    //     String password = loginRequest.getPassword();
+    @PostMapping(value = "/register", consumes = {"multipart/form-data"})
+    public ResponseEntity<String> register(
+            @RequestPart("user") String userJson,
+            @RequestPart(value = "fotoPerfil", required = false) MultipartFile fotoPerfil
+    ) throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        User user = objectMapper.readValue(userJson, User.class);
 
-    //     Optional<User> userOptional = userService.findByUsername(identifier);
-    //     if (!userOptional.isPresent()) {
-    //         userOptional = userService.findByEmail(identifier);
-    //     }
-    //     if (userOptional.isPresent() && userOptional.get().getSenha().equals(password)) {
-    //         return ResponseEntity.ok("Login bem-sucedido!");
-    //     } else {
-    //         return ResponseEntity.badRequest().body("Usuário ou senha inválidos!");
-    //     }
-    // }
+        if (fotoPerfil != null && !fotoPerfil.isEmpty()) {
+            String contentType = fotoPerfil.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                return ResponseEntity.badRequest().body("Apenas imagens são permitidas!");
+            }
+            
 
-    @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody User user) {
-        try {
-            userService.save(user);
-            return ResponseEntity.ok("Usuário cadastrado com sucesso!");
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Erro ao cadastrar usuário: " + e.getMessage());
+            String nomeArquivo = UUID.randomUUID() + "_" + fotoPerfil.getOriginalFilename();
+            String caminhoFoto = "/uploads/" + nomeArquivo;
+            user.setFotoPerfil(caminhoFoto);
+
+            // Garante que a pasta existe
+            Path destino = Paths.get("uploads/" + nomeArquivo);
+            Files.createDirectories(destino.getParent());
+            Files.write(destino, fotoPerfil.getBytes());
         }
+
+        userService.save(user);
+        return ResponseEntity.ok("Usuário cadastrado com sucesso!");
     }
 
     @GetMapping("/api/user/profile")
@@ -60,27 +72,5 @@ public class MaternidadeController {
         }
         return userOptional.map(user -> ResponseEntity.ok(user))
                 .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    public static class LoginRequest {
-
-        private String username;
-        private String password;
-
-        public String getUsername() {
-            return username;
-        }
-
-        public void setUsername(String username) {
-            this.username = username;
-        }
-
-        public String getPassword() {
-            return password;
-        }
-
-        public void setPassword(String password) {
-            this.password = password;
-        }
     }
 }

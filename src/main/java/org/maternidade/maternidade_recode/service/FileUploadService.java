@@ -29,7 +29,13 @@ public class FileUploadService {
         }
         String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
         Path filePath = Paths.get(uploadDir + fileName);
-        Files.write(filePath, file.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+        System.out.println("Salvando arquivo em: " + filePath); // Log do caminho
+        try {
+            Files.write(filePath, file.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+        } catch (IOException e) {
+            System.out.println("Erro ao salvar arquivo: " + e.getMessage()); // Log do erro
+            throw e; // Relança para o catch externo
+        }
         return "/uploads/" + fileName; // Ensure relative path
     }
 }

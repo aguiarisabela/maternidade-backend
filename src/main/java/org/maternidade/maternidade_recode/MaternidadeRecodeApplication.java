@@ -26,9 +26,10 @@ public class MaternidadeRecodeApplication {
             @Override
             public void addResourceHandlers(ResourceHandlerRegistry registry) {
                 registry.addResourceHandler("/uploads/**")
-                        .addResourceLocations("file:uploads/")
+                        .addResourceLocations("file:uploads//") // Mapeia o diretório de uploads
                         .setCachePeriod(0);
             }
         };
     }
+    
 }

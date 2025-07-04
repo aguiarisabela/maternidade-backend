@@ -3,6 +3,8 @@ package org.maternidade.maternidade_recode.controller;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.maternidade.maternidade_recode.model.Post;
@@ -47,7 +49,7 @@ public class PostController {
         }).collect(Collectors.toList());
     }
 
-    @PostMapping(consumes = {"multipart/form-data"})
+    @PostMapping(consumes = { "multipart/form-data" })
     public ResponseEntity<?> createPost(
             @RequestPart("post") String postJson,
             @RequestPart(value = "imagem", required = false) MultipartFile imagem) {
@@ -60,7 +62,8 @@ public class PostController {
             if (autor == null) {
                 return ResponseEntity.badRequest().body("Autor não encontrado para o ID: " + autorId);
             }
-            System.out.println("Autor encontrado: " + autor.getNomeCompleto() + ", fotoPerfil: " + autor.getFotoPerfil());
+            System.out
+                    .println("Autor encontrado: " + autor.getNomeCompleto() + ", fotoPerfil: " + autor.getFotoPerfil());
             post.setAutor(autor);
             post.setDataCriacao(LocalDateTime.now());
             post.setLikes(0);
@@ -84,7 +87,7 @@ public class PostController {
         }
     }
 
-    @PutMapping(value = "/{id}", consumes = {"multipart/form-data"})
+    @PutMapping(value = "/{id}", consumes = { "multipart/form-data" })
     public ResponseEntity<?> updatePost(
             @PathVariable Long id,
             @RequestPart("post") String postJson,
@@ -163,5 +166,20 @@ public class PostController {
             return ResponseEntity.badRequest().body("Erro ao adicionar comentário: " + e.getMessage());
         }
     }
-    
+
+    @PostMapping("/{id}/like")
+    public ResponseEntity<?> likePost(@PathVariable Long id, @RequestBody Map<String, Object> payload) {
+        Long userId = Long.valueOf(payload.get("userId").toString());
+        Post post = postService.findById(id);
+        if (post == null) {
+            return ResponseEntity.badRequest().body("Post não encontrado.");
+        }
+        if (post.getLikedUserIds().contains(userId)) {
+            return ResponseEntity.badRequest().body("Usuário já curtiu este post.");
+        }
+        post.getLikedUserIds().add(userId);
+        post.setLikes(post.getLikedUserIds().size());
+        postService.save(post);
+        return ResponseEntity.ok(post.getLikes());
+    }
 }

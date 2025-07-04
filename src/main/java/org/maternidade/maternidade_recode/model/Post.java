@@ -3,7 +3,9 @@ package org.maternidade.maternidade_recode.model;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "Post")
@@ -36,6 +38,18 @@ public class Post {
     @CollectionTable(name = "post_comments", joinColumns = @JoinColumn(name = "post_id"))
     @Column(name = "comment")
     private List<String> comments = new ArrayList<>();
+
+    @ElementCollection
+    @CollectionTable(name = "post_likes", joinColumns = @JoinColumn(name = "post_id"))
+    private Set<Long> likedUserIds = new HashSet<>();
+
+    public Set<Long> getLikedUserIds() {
+        return likedUserIds;
+    }
+
+    public void setLikedUserIds(Set<Long> likedUserIds) {
+        this.likedUserIds = likedUserIds;
+    }
 
     public Post() {
     }

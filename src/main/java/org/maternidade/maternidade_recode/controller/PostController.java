@@ -4,14 +4,18 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.maternidade.maternidade_recode.model.Like;
 import org.maternidade.maternidade_recode.model.Post;
 import org.maternidade.maternidade_recode.model.User;
+import org.maternidade.maternidade_recode.repository.LikeRepository;
+import org.maternidade.maternidade_recode.repository.PostRepository;
+import org.maternidade.maternidade_recode.repository.UserRepository;
 import org.maternidade.maternidade_recode.service.FileUploadService;
 import org.maternidade.maternidade_recode.service.PostService;
 import org.maternidade.maternidade_recode.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,6 +38,14 @@ public class PostController {
     private final PostService postService;
     private final UserService userService;
     private final FileUploadService fileUploadService;
+
+    @Autowired
+    private LikeRepository likeRepository;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private PostRepository postRepository;
+
 
     public PostController(PostService postService, UserService userService, FileUploadService fileUploadService) {
         this.postService = postService;
@@ -170,16 +182,25 @@ public class PostController {
     @PostMapping("/{id}/like")
     public ResponseEntity<?> likePost(@PathVariable Long id, @RequestBody Map<String, Object> payload) {
         Long userId = Long.valueOf(payload.get("userId").toString());
-        Post post = postService.findById(id);
-        if (post == null) {
-            return ResponseEntity.badRequest().body("Post não encontrado.");
+        Post post = postRepository.findById(id).orElse(null);
+        User user = userRepository.findById(userId).orElse(null);
+        if (post == null || user == null) {
+            return ResponseEntity.badRequest().body("Post ou usuário não encontrado.");
         }
-        if (post.getLikedUserIds().contains(userId)) {
+        // Verifica se já existe like desse usuário para esse post
+        if (likeRepository.existsByPostAndUser(post, user)) {
             return ResponseEntity.badRequest().body("Usuário já curtiu este post.");
         }
-        post.getLikedUserIds().add(userId);
-        post.setLikes(post.getLikedUserIds().size());
-        postService.save(post);
-        return ResponseEntity.ok(post.getLikes());
+        Like like = new Like();
+        like.setPost(post);
+        like.setUser(user);
+        likeRepository.save(like);
+
+        // Atualiza o contador de likes no post (opcional)
+        long likesCount = likeRepository.countByPost(post);
+        post.setLikes((int) likesCount);
+        postRepository.save(post);
+
+        return ResponseEntity.ok(likesCount);
     }
 }

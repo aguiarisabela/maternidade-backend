@@ -3,13 +3,19 @@ package org.maternidade.maternidade_recode.controller;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.maternidade.maternidade_recode.model.Like;
 import org.maternidade.maternidade_recode.model.Post;
 import org.maternidade.maternidade_recode.model.User;
+import org.maternidade.maternidade_recode.repository.LikeRepository;
+import org.maternidade.maternidade_recode.repository.PostRepository;
+import org.maternidade.maternidade_recode.repository.UserRepository;
 import org.maternidade.maternidade_recode.service.FileUploadService;
 import org.maternidade.maternidade_recode.service.PostService;
 import org.maternidade.maternidade_recode.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,6 +39,14 @@ public class PostController {
     private final UserService userService;
     private final FileUploadService fileUploadService;
 
+    @Autowired
+    private LikeRepository likeRepository;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private PostRepository postRepository;
+
+
     public PostController(PostService postService, UserService userService, FileUploadService fileUploadService) {
         this.postService = postService;
         this.userService = userService;
@@ -47,7 +61,7 @@ public class PostController {
         }).collect(Collectors.toList());
     }
 
-    @PostMapping(consumes = {"multipart/form-data"})
+    @PostMapping(consumes = { "multipart/form-data" })
     public ResponseEntity<?> createPost(
             @RequestPart("post") String postJson,
             @RequestPart(value = "imagem", required = false) MultipartFile imagem) {
@@ -60,7 +74,8 @@ public class PostController {
             if (autor == null) {
                 return ResponseEntity.badRequest().body("Autor não encontrado para o ID: " + autorId);
             }
-            System.out.println("Autor encontrado: " + autor.getNomeCompleto() + ", fotoPerfil: " + autor.getFotoPerfil());
+            System.out
+                    .println("Autor encontrado: " + autor.getNomeCompleto() + ", fotoPerfil: " + autor.getFotoPerfil());
             post.setAutor(autor);
             post.setDataCriacao(LocalDateTime.now());
             post.setLikes(0);
@@ -84,7 +99,7 @@ public class PostController {
         }
     }
 
-    @PutMapping(value = "/{id}", consumes = {"multipart/form-data"})
+    @PutMapping(value = "/{id}", consumes = { "multipart/form-data" })
     public ResponseEntity<?> updatePost(
             @PathVariable Long id,
             @RequestPart("post") String postJson,
@@ -163,5 +178,29 @@ public class PostController {
             return ResponseEntity.badRequest().body("Erro ao adicionar comentário: " + e.getMessage());
         }
     }
-    
+
+    @PostMapping("/{id}/like")
+    public ResponseEntity<?> likePost(@PathVariable Long id, @RequestBody Map<String, Object> payload) {
+        Long userId = Long.valueOf(payload.get("userId").toString());
+        Post post = postRepository.findById(id).orElse(null);
+        User user = userRepository.findById(userId).orElse(null);
+        if (post == null || user == null) {
+            return ResponseEntity.badRequest().body("Post ou usuário não encontrado.");
+        }
+        // Verifica se já existe like desse usuário para esse post
+        if (likeRepository.existsByPostAndUser(post, user)) {
+            return ResponseEntity.badRequest().body("Usuário já curtiu este post.");
+        }
+        Like like = new Like();
+        like.setPost(post);
+        like.setUser(user);
+        likeRepository.save(like);
+
+        // Atualiza o contador de likes no post (opcional)
+        long likesCount = likeRepository.countByPost(post);
+        post.setLikes((int) likesCount);
+        postRepository.save(post);
+
+        return ResponseEntity.ok(likesCount);
+    }
 }

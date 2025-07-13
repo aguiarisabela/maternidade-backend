@@ -10,7 +10,6 @@ import java.util.Set;
 @Entity
 @Table(name = "Post")
 public class Post {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -34,27 +33,14 @@ public class Post {
     @Column(name = "likes")
     private int likes;
 
-    @ElementCollection
-    @CollectionTable(name = "post_comments", joinColumns = @JoinColumn(name = "post_id"))
-    @Column(name = "comment")
-    private List<String> comments = new ArrayList<>();
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Comentario> comentarios = new ArrayList<>();
 
     @ElementCollection
     @CollectionTable(name = "post_likes", joinColumns = @JoinColumn(name = "post_id"))
     private Set<Long> likedUserIds = new HashSet<>();
 
-    public Set<Long> getLikedUserIds() {
-        return likedUserIds;
-    }
-
-    public void setLikedUserIds(Set<Long> likedUserIds) {
-        this.likedUserIds = likedUserIds;
-    }
-
-    public Post() {
-    }
-
-    // Getters and Setters
+    // Getters e Setters...
     public Long getId() {
         return id;
     }
@@ -111,11 +97,19 @@ public class Post {
         this.likes = likes;
     }
 
-    public List<String> getComments() {
-        return comments;
+    public List<Comentario> getComentarios() {
+        return comentarios;
     }
 
-    public void setComments(List<String> comments) {
-        this.comments = comments;
+    public void setComentarios(List<Comentario> comentarios) {
+        this.comentarios = comentarios;
+    }
+
+    public Set<Long> getLikedUserIds() {
+        return likedUserIds;
+    }
+
+    public void setLikedUserIds(Set<Long> likedUserIds) {
+        this.likedUserIds = likedUserIds;
     }
 }

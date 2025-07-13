@@ -6,9 +6,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.maternidade.maternidade_recode.model.Comentario;
 import org.maternidade.maternidade_recode.model.Like;
 import org.maternidade.maternidade_recode.model.Post;
 import org.maternidade.maternidade_recode.model.User;
+import org.maternidade.maternidade_recode.repository.ComentarioRepository;
 import org.maternidade.maternidade_recode.repository.LikeRepository;
 import org.maternidade.maternidade_recode.repository.PostRepository;
 import org.maternidade.maternidade_recode.repository.UserRepository;
@@ -16,17 +18,12 @@ import org.maternidade.maternidade_recode.service.FileUploadService;
 import org.maternidade.maternidade_recode.service.PostService;
 import org.maternidade.maternidade_recode.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,39 +31,52 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @RestController
 @RequestMapping("/posts")
 public class PostController {
-
-    private final PostService postService;
-    private final UserService userService;
-    private final FileUploadService fileUploadService;
-
+    @Autowired
+    private ComentarioRepository comentarioRepository;
     @Autowired
     private LikeRepository likeRepository;
     @Autowired
     private UserRepository userRepository;
     @Autowired
+    private PostService postService;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private FileUploadService fileUploadService;
+
+    @GetMapping("/{id}/comentarios")
+    public ResponseEntity<List<Comentario>> getComentarios(
+
+
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("dataRegistro").descending());
+        Page<Comentario> comentariosPage = comentarioRepository.findByPostId(id, pageable);
+
+        return ResponseEntity.ok(comentariosPage.getContent());
+    }
+
+    @Autowired
     private PostRepository postRepository;
-
-
-    public PostController(PostService postService, UserService userService, FileUploadService fileUploadService) {
-        this.postService = postService;
-        this.userService = userService;
-        this.fileUploadService = fileUploadService;
-    }
-
     @GetMapping
-    public List<Post> getAllPosts() {
-        return postService.findAll().stream().map(post -> {
-            post.getAutor().getNomeCompleto(); // Força o carregamento do autor
-            return post;
-        }).collect(Collectors.toList());
+    public ResponseEntity<List<Post>> getAllPosts() {
+        try {
+            List<Post> posts = postRepository.findAllWithAutor();
+            return ResponseEntity.ok(posts);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);
+        }
     }
+
+    
 
     @PostMapping(consumes = { "multipart/form-data" })
     public ResponseEntity<?> createPost(
             @RequestPart("post") String postJson,
             @RequestPart(value = "imagem", required = false) MultipartFile imagem) {
         try {
-            System.out.println("JSON recebido: " + postJson);
             ObjectMapper objectMapper = new ObjectMapper();
             Post post = objectMapper.readValue(postJson, Post.class);
             Long autorId = post.getAutor().getId();
@@ -74,12 +84,10 @@ public class PostController {
             if (autor == null) {
                 return ResponseEntity.badRequest().body("Autor não encontrado para o ID: " + autorId);
             }
-            System.out
-                    .println("Autor encontrado: " + autor.getNomeCompleto() + ", fotoPerfil: " + autor.getFotoPerfil());
             post.setAutor(autor);
             post.setDataCriacao(LocalDateTime.now());
             post.setLikes(0);
-            post.setComments(new java.util.ArrayList<>());
+            post.setComentarios(new java.util.ArrayList<>());
 
             if (imagem != null && !imagem.isEmpty()) {
                 if (imagem.getSize() > 10 * 1024 * 1024) {
@@ -90,7 +98,6 @@ public class PostController {
             }
 
             Post savedPost = postService.save(post);
-            System.out.println("Post salvo com ID: " + savedPost.getId());
             return ResponseEntity.ok(savedPost);
         } catch (IOException e) {
             return ResponseEntity.badRequest().body("Erro ao processar arquivo: " + e.getMessage());
@@ -105,7 +112,6 @@ public class PostController {
             @RequestPart("post") String postJson,
             @RequestPart(value = "imagem", required = false) MultipartFile imagem) {
         try {
-            System.out.println("JSON recebido para edição: " + postJson); // Log do JSON
             ObjectMapper objectMapper = new ObjectMapper();
             Post post = objectMapper.readValue(postJson, Post.class);
             Post existingPost = postService.findById(id);
@@ -120,10 +126,10 @@ public class PostController {
             post.setId(id);
             post.setDataCriacao(existingPost.getDataCriacao());
             post.setLikes(existingPost.getLikes());
-            post.setComments(existingPost.getComments());
+            post.setComentarios(existingPost.getComentarios());
 
             if (imagem != null && !imagem.isEmpty()) {
-                if (imagem.getSize() > 10 * 1024 * 1024) { // Limite de 10MB
+                if (imagem.getSize() > 10 * 1024 * 1024) {
                     return ResponseEntity.badRequest().body("Arquivo muito grande. Máximo 10MB.");
                 }
                 String imagePath;
@@ -138,7 +144,6 @@ public class PostController {
             }
 
             Post updatedPost = postService.save(post);
-            System.out.println("Post atualizado com ID: " + updatedPost.getId()); // Log de sucesso
             return ResponseEntity.ok(updatedPost);
         } catch (IOException e) {
             return ResponseEntity.badRequest().body("Erro ao processar arquivo: " + e.getMessage());
@@ -164,16 +169,34 @@ public class PostController {
         }
     }
 
-    @PostMapping("/{id}/comments")
-    public ResponseEntity<?> addComment(@PathVariable Long id, @RequestBody String comment) {
+    @PostMapping("/{id}/comentarios")
+    public ResponseEntity<?> addComment(@PathVariable Long id, @RequestBody Map<String, Object> payload) {
         try {
+            String texto = (String) payload.get("texto");
+            Long autorId = payload.get("autorId") != null ? ((Number) payload.get("autorId")).longValue() : null;
+
             Post post = postService.findById(id);
-            if (post != null) {
-                post.getComments().add(comment);
-                postService.save(post);
-                return ResponseEntity.ok(post);
+            if (post == null) {
+                return ResponseEntity.badRequest().body("Post não encontrado.");
             }
-            return ResponseEntity.badRequest().body("Post não encontrado.");
+            User autor = userService.findById(autorId);
+            if (autor == null) {
+                return ResponseEntity.badRequest().body("Autor não encontrado.");
+            }
+
+            Comentario comentario = new Comentario();
+            comentario.setTexto(texto);
+            comentario.setAutor(autor);
+            comentario.setPost(post);
+            comentario.setDataRegistro(LocalDateTime.now());
+
+            comentarioRepository.save(comentario);
+
+            // Atualiza a lista de comentários do post (opcional, dependendo do mapeamento)
+            post.getComentarios().add(comentario);
+            postService.save(post);
+
+            return ResponseEntity.ok(comentario);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Erro ao adicionar comentário: " + e.getMessage());
         }

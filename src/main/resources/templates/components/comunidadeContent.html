@@ -1,0 +1,40 @@
+<div class="container mt-4" th:fragment="conteudoComunidade">
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card mb-3">
+        <div class="card-body text-center">
+          <button class="btn faca-login btn-primary">
+            <a th:href="@{/login}" class="text-white"
+              >Faça login para criar um post</a
+            >
+          </button>
+        </div>
+      </div>
+      <div class="post-card">
+        <h5 class="card-title">Maria Souza</h5>
+        <p class="card-text">
+          Ser mãe é um desafio, mas também a melhor experiência da minha vida!
+          💖
+        </p>
+      </div>
+      <div class="post-card">
+        <h5 class="card-title">Ana Pereira</h5>
+        <p class="card-text">
+          O primeiro ano do meu bebê foi difícil, mas com apoio tudo ficou
+          melhor. Obrigada por essa comunidade! 🤱
+        </p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header">Categorias</div>
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item">Gestação</li>
+          <li class="list-group-item">Puerpério</li>
+          <li class="list-group-item">Dicas de Cuidados</li>
+          <li class="list-group-item">Relatos</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

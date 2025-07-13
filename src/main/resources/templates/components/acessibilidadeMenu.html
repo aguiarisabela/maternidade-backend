@@ -1,0 +1,59 @@
+<head>
+    <link rel="stylesheet" th:href="@{/css/style-acessibilidade.css}">
+</head>
+
+
+    <div class="acessibilidade-container" th:fragment="acessibilidadeMenu">
+        <button class="acessibilidade-btn" onclick="toggleMenu()" aria-label="Abrir menu de acessibilidade">
+            <span class="material-icons">accessibility</span>
+        </button>
+        <div class="acessibilidade-menu" id="acessibilidadeMenu" style="display: none;">
+            <button onclick="increaseFont()" aria-label="Aumentar tamanho da fonte">
+                <span class="material-icons">zoom_in</span> Aumentar Fonte
+            </button>
+            <button onclick="decreaseFont()" aria-label="Diminuir tamanho da fonte">
+                <span class="material-icons">zoom_out</span> Diminuir Fonte
+            </button>
+            <button onclick="toggleContrast()" aria-label="Alternar contraste alto">
+                <span class="material-icons">contrast</span> Ativar Contraste Alto
+            </button>
+            <button onclick="toggleDarkMode()" aria-label="Alternar modo noturno">
+                <span class="material-icons">dark_mode</span> Ativar Modo Noturno
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let isOpen = false;
+        let fontSize = 16;
+        let highContrast = false;
+        let darkMode = false;
+
+        function toggleMenu() {
+            isOpen = !isOpen;
+            document.getElementById('acessibilidadeMenu').style.display = isOpen ? 'block' : 'none';
+        }
+
+        function increaseFont() {
+            fontSize = Math.min(fontSize + 2, 24);
+            document.documentElement.style.fontSize = fontSize + 'px';
+        }
+
+        function decreaseFont() {
+            fontSize = Math.max(fontSize - 2, 12);
+            document.documentElement.style.fontSize = fontSize + 'px';
+        }
+
+        function toggleContrast() {
+            highContrast = !highContrast;
+            document.body.classList.toggle('high-contrast', highContrast);
+        }
+
+        function toggleDarkMode() {
+            darkMode = !darkMode;
+            document.body.classList.toggle('dark-mode', darkMode);
+        }
+    </script>
+
+
+</html>

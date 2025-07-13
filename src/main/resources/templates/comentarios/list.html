@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <title>Lista Comentários</title>
+  </head>
+  <body>
+    <h1>Comentários</h1>
+    <a th:href="@{/comentarios/new}">Novo Comentário</a>
+    <table border="1">
+      <tr>
+        <th>ID</th>
+        <th>Texto</th>
+        <th>Post</th>
+        <th>Autor</th>
+        <th>Ações</th>
+      </tr>
+      <tr th:each="comentario : ${comentarios}">
+        <td th:text="${comentario.id}" />
+        <td th:text="${comentario.texto}" />
+        <td th:text="${comentario.post.titulo}" />
+        <td th:text="${comentario.autor.nomeCompleto}" />
+        <td>
+          <a th:href="@{'/comentarios/edit/' + ${comentario.id}}">Editar</a>
+          <a th:href="@{'/comentarios/delete/' + ${comentario.id}}">Excluir</a>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

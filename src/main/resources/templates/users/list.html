@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Lista Usuários</title></head>
+<body>
+<h1>Usuários</h1>
+<a th:href="@{/users/new}">Novo Usuário</a>
+
+<table border="1">
+    <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Foto de Perfil</th>
+        <th>Data Nascimento</th>
+        <th>Data de Cadastro</th>
+        <th>Newsletter</th>
+        <th>Concorda Termos</th>
+        <th>Tipo</th>
+        <th>Ações</th>
+    </tr>
+    <tr th:each="user : ${users}">
+        <td th:text="${user.id}"></td>
+        <td th:text="${user.nomeCompleto}"></td>
+        <td th:text="${user.username}"></td>
+        <td th:text="${user.email}"></td>
+        <td th:text="${user.fotoPerfil}"></td>
+        <td th:text="${#temporals.format(user.dataNascimento, 'dd/MM/yyyy')}"></td>
+        <td th:text="${#temporals.format(user.dataCadastro, 'dd/MM/yyyy')}"></td>
+        <td th:text="${user.newsletter ? 'Sim' : 'Não'}"></td>
+        <td th:text="${user.acceptedTerms ? 'Sim' : 'Não'}"></td>
+        <td th:text="${user.role}"></td>
+        <td>
+            <a th:href="@{'/users/edit/' + ${user.id}}">Editar</a> |
+            <a th:href="@{'/users/delete/' + ${user.id}}"
+               onclick="return confirm('Tem certeza que deseja excluir este usuário?');">Excluir</a>
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>

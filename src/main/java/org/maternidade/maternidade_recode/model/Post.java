@@ -1,3 +1,5 @@
+//post
+
 package org.maternidade.maternidade_recode.model;
 
 import jakarta.persistence.*;
@@ -10,6 +12,7 @@ import java.util.Set;
 @Entity
 @Table(name = "Post")
 public class Post {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -33,14 +36,27 @@ public class Post {
     @Column(name = "likes")
     private int likes;
 
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Comentario> comentarios = new ArrayList<>();
+    @ElementCollection
+    @CollectionTable(name = "post_comments", joinColumns = @JoinColumn(name = "post_id"))
+    @Column(name = "comment")
+    private List<String> comments = new ArrayList<>();
 
     @ElementCollection
     @CollectionTable(name = "post_likes", joinColumns = @JoinColumn(name = "post_id"))
     private Set<Long> likedUserIds = new HashSet<>();
 
-    // Getters e Setters...
+    public Set<Long> getLikedUserIds() {
+        return likedUserIds;
+    }
+
+    public void setLikedUserIds(Set<Long> likedUserIds) {
+        this.likedUserIds = likedUserIds;
+    }
+
+    public Post() {
+    }
+
+    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -97,19 +113,11 @@ public class Post {
         this.likes = likes;
     }
 
-    public List<Comentario> getComentarios() {
-        return comentarios;
+    public List<String> getComments() {
+        return comments;
     }
 
-    public void setComentarios(List<Comentario> comentarios) {
-        this.comentarios = comentarios;
-    }
-
-    public Set<Long> getLikedUserIds() {
-        return likedUserIds;
-    }
-
-    public void setLikedUserIds(Set<Long> likedUserIds) {
-        this.likedUserIds = likedUserIds;
+    public void setComments(List<String> comments) {
+        this.comments = comments;
     }
 }
